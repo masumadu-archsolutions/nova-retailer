@@ -1,2 +1,2 @@
-from .customer_model import Customer
-from .lead_model import Lead
+from .retailer_model import Retailer
+# from .lead_model import Lead

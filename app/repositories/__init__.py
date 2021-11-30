@@ -1,2 +1,2 @@
-from .customer_repository import CustomerRepository
-from .lead_repository import LeadRepository
+from .retailer_repository import RetailerRepository
+# from .lead_repository import LeadRepository

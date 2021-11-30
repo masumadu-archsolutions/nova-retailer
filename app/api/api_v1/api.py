@@ -1,4 +1,4 @@
-from .endpoints.customer_view import customer
+from .endpoints.retailer_view import retailer
 
 
 def init_app(app):
@@ -8,4 +8,4 @@ def init_app(app):
     :param app:
     :return:
     """
-    app.register_blueprint(customer, url_prefix="/api/v1/customers")
+    app.register_blueprint(retailer, url_prefix="/api/v1/retailers")

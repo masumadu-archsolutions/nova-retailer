@@ -32,7 +32,11 @@ class PinResetSchema(Schema):
 
 
 class LoginSchema(Schema):
-    phone_number = fields.Str(validate=validate.Regexp(constants.PHONE_NUMBER_REGEX))
+    phone_number = fields.Str(
+        validate=[
+            validate.Regexp(constants.PHONE_NUMBER_REGEX),
+            validate.Length(min=10, max=10)
+        ])
     pin = fields.Str(validate=validate.Length(min=4, max=4))
 
 

@@ -1,4 +1,6 @@
+import json
 import requests
+from requests import exceptions
 import config
 from dataclasses import dataclass
 from app import constants
@@ -10,6 +12,7 @@ from core.service_interfaces.auth_service_interface import (
 CLIENT_ID = config.Config.KEYCLOAK_CLIENT_ID or ""
 CLIENT_SECRET = config.Config.KEYCLOAK_CLIENT_SECRET or ""
 URI = config.Config.KEYCLOAK_URI or ""
+ADMIN_REALM = config.Config.KEYCLOAK_ADMIN_REALM or ""
 REALM = config.Config.KEYCLOAK_REALM or ""
 REALM_PREFIX = "/auth/realms/"
 AUTH_ENDPOINT = "/protocol/openid-connect/token/"
@@ -43,14 +46,30 @@ class AuthService(AuthServiceInterface):
 
         # create keycloak uri for token login
         url = URI + REALM_PREFIX + REALM + AUTH_ENDPOINT
+        # send post request to keycloak server
+        try:
+            response = requests.post(url, data=data)
+        except exceptions.ConnectionError:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_CONNECTION_ERROR
+            )
+        except exceptions.HTTPError:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_HTTP_ERROR
+            )
+        except exceptions.Timeout:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_CONNECTION_TIMEOUT
+            )
+        except exceptions.RequestException:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_REQUEST_ERROR
+            )
 
-        response = requests.post(url, data=data)
-
-        # handle error if its anything more than a 200 as a 200 response is the
-        # only expected response
+        # handle response sent by keycloak server
         if response.status_code != 200:
             raise AppException.KeyCloakAdminException(
-                {constants.KEYCLOAK_ERROR: ["Error in username or password"]},
+                {constants.KEYCLOAK_ACCESS_TOKEN: [response.json()]},
                 status_code=response.status_code,
             )
 
@@ -78,11 +97,32 @@ class AuthService(AuthServiceInterface):
         }
 
         url = URI + REALM_PREFIX + REALM + AUTH_ENDPOINT
+        # send post request to keycloak server
+        try:
+            response = requests.post(url, data=request_data)
+        except exceptions.ConnectionError:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_CONNECTION_ERROR
+            )
+        except exceptions.HTTPError:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_HTTP_ERROR
+            )
+        except exceptions.Timeout:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_CONNECTION_TIMEOUT
+            )
+        except exceptions.RequestException:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_REQUEST_ERROR
+            )
 
-        response = requests.post(url, data=request_data)
-
+        # handle response sent by keycloak server
         if response.status_code != requests.codes.ok:
-            raise AppException.BadRequest({"error": ["Error in refresh token"]})
+            raise AppException.KeyCloakAdminException(
+                {constants.KEYCLOAK_REFRESH_TOKEN: [response.json()]},
+                status_code=response.status_code,
+            )
 
         data: dict = response.json()
         return {
@@ -91,8 +131,6 @@ class AuthService(AuthServiceInterface):
         }
 
     def create_user(self, request_data: dict):
-        assert request_data.get("group"), "Entity must belong to a group"
-
         data = {
             "email": request_data.get("email"),
             "username": request_data.get("username"),
@@ -124,7 +162,7 @@ class AuthService(AuthServiceInterface):
         user = self.get_keycloak_user(request_data.get("username"))
         user_id: str = user.get("id")
 
-        # assign keycloak group
+        # assign user to group
         group = request_data.get("group")
         iam_groups = self.get_all_groups()
         required_groups = list(filter(lambda x: x.get("name") == group, iam_groups))
@@ -133,26 +171,35 @@ class AuthService(AuthServiceInterface):
                 f"group {group} does not exist in IAM service"
             )
         group_data = required_groups[0]
-
+        # assign user to a group
         self.assign_group(user_id, group_data)
-
-        # login user and return token
-        token_data = self.get_token(
-            {
-                "username": request_data.get("username"),
-                "password": request_data.get("password"),
-            }
-        )
-        token_data["id"] = user_id
-        return token_data
+        return user.get("username")
 
     def get_all_groups(self):
         url = URI + REALM_URL + REALM + "/groups"
-        response = requests.get(url, headers=self.get_keycloak_headers())
-
+        # send get request to keycloak server
+        try:
+            response = requests.get(url, headers=self.get_keycloak_headers())
+        except exceptions.ConnectionError:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_CONNECTION_ERROR
+            )
+        except exceptions.HTTPError:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_HTTP_ERROR
+            )
+        except exceptions.Timeout:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_CONNECTION_TIMEOUT
+            )
+        except exceptions.RequestException:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_REQUEST_ERROR
+            )
+        # handle response sent by keycloak server
         if response.status_code >= 300:
             raise AppException.KeyCloakAdminException(
-                {"message": [response.json().get("errorMessage")]},
+                {constants.KEYCLOAK_GROUP: [response.json()]},
                 status_code=response.status_code,
             )
         return response.json()
@@ -165,10 +212,29 @@ class AuthService(AuthServiceInterface):
         :return:
         """
         url = URI + REALM_URL + REALM + "/users?username=" + username
-        response = requests.get(url, headers=self.get_keycloak_headers())
-        if response.status_code >= 300:
+        # send a get request to keycloak server
+        try:
+            response = requests.get(url, headers=self.get_keycloak_headers())
+        except exceptions.ConnectionError:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_CONNECTION_ERROR
+            )
+        except exceptions.HTTPError:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_HTTP_ERROR
+            )
+        except exceptions.Timeout:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_CONNECTION_TIMEOUT
+            )
+        except exceptions.RequestException:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_REQUEST_ERROR
+            )
+        # handle response sent by keycloak server
+        if response.status_code != 200:
             raise AppException.KeyCloakAdminException(
-                {"message": [response.json().get("errorMessage")]},
+                {constants.KEYCLOAK_USER: [response.json()]},
                 status_code=response.status_code,
             )
         user = response.json()
@@ -181,10 +247,29 @@ class AuthService(AuthServiceInterface):
         endpoint = "/users/" + user_id + "/groups/" + group.get("id")
         url = URI + REALM_URL + REALM + endpoint
         headers = self.headers or self.get_keycloak_headers()
-        response = requests.put(url, headers=headers)
+        # send a put request to keycloak server
+        try:
+            response = requests.put(url, headers=headers)
+        except exceptions.ConnectionError:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_CONNECTION_ERROR
+            )
+        except exceptions.HTTPError:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_HTTP_ERROR
+            )
+        except exceptions.Timeout:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_CONNECTION_TIMEOUT
+            )
+        except exceptions.RequestException:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_REQUEST_ERROR
+            )
+        # handle response sent by keycloak server
         if response.status_code >= 300:
             raise AppException.KeyCloakAdminException(
-                {constants.KEYCLOAK_ERROR: [response.json().get("errorMessage")]},
+                {constants.KEYCLOAK_GROUP: [response.json()]},
                 status_code=response.status_code,
             )
         return True
@@ -192,8 +277,8 @@ class AuthService(AuthServiceInterface):
     def reset_password(self, data):
         user_id = data.get("user_id")
         new_password = data.get("new_password")
-        assert user_id, "user_id is required"
-        assert new_password, "new_password is required"
+        # assert user_id, "user_id is required"
+        # assert new_password, "new_password is required"
         url = "/users/" + user_id + "/reset-password"
 
         data = {"type": "password", "value": new_password, "temporary": False}
@@ -210,10 +295,29 @@ class AuthService(AuthServiceInterface):
         """
         url = URI + REALM_URL + REALM + endpoint
         headers = self.headers or self.get_keycloak_headers()
-        response = requests.post(url, headers=headers, json=data)
+        # send a post request to keycloak server
+        try:
+            response = requests.post(url, headers=headers, json=data)
+        except exceptions.ConnectionError:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_CONNECTION_ERROR
+            )
+        except exceptions.HTTPError:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_HTTP_ERROR
+            )
+        except exceptions.Timeout:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_CONNECTION_TIMEOUT
+            )
+        except exceptions.RequestException:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_REQUEST_ERROR
+            )
+        # handle response from keycloak server
         if response.status_code >= 300:
             raise AppException.KeyCloakAdminException(
-                {constants.KEYCLOAK_ERROR: [response.json().get("errorMessage")]},
+                {constants.KEYCLOAK_POST: [response.json()]},
                 status_code=response.status_code,
             )
         return response
@@ -227,10 +331,29 @@ class AuthService(AuthServiceInterface):
         """
         url = URI + REALM_URL + REALM + endpoint
         headers = self.headers or self.get_keycloak_headers()
-        response = requests.put(url, headers=headers, json=data)
+        # send a put request to keycloak server
+        try:
+            response = requests.put(url, headers=headers, json=data)
+        except exceptions.ConnectionError:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_CONNECTION_ERROR
+            )
+        except exceptions.HTTPError:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_HTTP_ERROR
+            )
+        except exceptions.Timeout:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_CONNECTION_TIMEOUT
+            )
+        except exceptions.RequestException:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_REQUEST_ERROR
+            )
+        # handle response from keycloak server
         if response.status_code >= 300:
             raise AppException.KeyCloakAdminException(
-                {constants.KEYCLOAK_ERROR: [response.json().get("errorMessage")]},
+                {constants.KEYCLOAK_PUT: [response.json()]},
                 status_code=response.status_code,
             )
         return response
@@ -247,15 +370,29 @@ class AuthService(AuthServiceInterface):
             "password": config.Config.KEYCLOAK_ADMIN_PASSWORD,
         }
 
-        url = URI + REALM_PREFIX + REALM + AUTH_ENDPOINT
-
-        response = requests.post(
-            url,
-            data=data,
-        )
+        url = URI + REALM_PREFIX + ADMIN_REALM + AUTH_ENDPOINT
+        try:
+            response = requests.post(url, data=data)
+        except exceptions.ConnectionError:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_CONNECTION_ERROR
+            )
+        except exceptions.HTTPError:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_HTTP_ERROR
+            )
+        except exceptions.Timeout:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_CONNECTION_TIMEOUT
+            )
+        except exceptions.RequestException:
+            raise AppException.OperationError(
+                context=constants.KEYCLOAK_REQUEST_ERROR
+            )
         if response.status_code != requests.codes.ok:
             raise AppException.KeyCloakAdminException(
-                {constants.KEYCLOAK_ERROR: [response.text]}, status_code=500
+                {constants.KEYCLOAK_ERROR: [response.json()]},
+                status_code=500
             )
         data = response.json()
         return data.get("access_token")

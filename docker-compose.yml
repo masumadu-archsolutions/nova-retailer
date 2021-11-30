@@ -1,70 +1,99 @@
 version: "3.8"
 services:
   backend:
-#    image: "joeymaclean/nova-be-customer"
+    image: "nova-retailer"
+    container_name: "nova_retailer"
     build:
      context: .
      dockerfile: Dockerfile
     environment:
       DB_ENGINE: ${DB_ENGINE}
       DB_USER: ${DB_USER}
-      DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DEV_DB_HOST: ${DEV_DB_HOST}
-      TEST_DB_HOST: ${TEST_DB_HOST}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       FLASK_ENV: ${FLASK_ENV}
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID}
       KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
-      KEYCLOAK_URI: ${KEYCLOAK_URI}
       KEYCLOAK_REALM: ${KEYCLOAK_REALM}
       KEYCLOAK_ADMIN_USER: ${KEYCLOAK_ADMIN_USER}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
-      KAFKA_CONSUMER_GROUP_ID: ${KAFKA_CONSUMER_GROUP_ID}
-      KEYCLOAK_CUSTOMER_ROLE_ID: ${KEYCLOAK_CUSTOMER_ROLE_ID}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      KEYCLOAK_DB_HOST: ${KEYCLOAK_DB_HOST}
+      KEYCLOAK_DB_PORT: ${KEYCLOAK_DB_PORT}
+      KEYCLOAK_DB_USER: ${KEYCLOAK_DB_USER}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KEYCLOAK_DB: ${KEYCLOAK_DB}
       REDIS_SERVER: ${REDIS_SERVER}
-      SMS_CLIENT_ID: ${SMS_CLIENT_ID}
-      SMS_CLIENT_SECRET: ${SMS_CLIENT_SECRET}
       JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
       JWT_ISSUER: ${JWT_ISSUER}
-#    command: "./gunicorn_starter.sh"
+    command: app/script/start_backend
     ports:
       - 8000:5000
+    networks:
+      - retailer_service
     volumes:
       - .:/app
     depends_on:
       - db
-#  queue:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    command: 'python -u /app/consumer.py'
-#    restart: always
-#    depends_on:
-#      - db
-  redis:
-    image: 'redis:4-alpine'
-    command: redis-server --requirepass ${REDIS_PASSWORD}
-    environment:
-      - REDIS_REPLICATION_MODE=master
-    ports:
-      - '6379:6379'
-
+      - redis
+      - keycloak_db
+      - keycloak
   db:
     image: postgres:12
+    container_name: "nova_retailer_db"
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-#    volumes:
-#      - $PWD/.dbdata:/var/lib/postgres
-#    ports:
-#      - 5435:5432
+    volumes:
+      - $PWD/.dbdata:/var/lib/postgres
+    ports:
+      - 5430:5432
+    networks:
+      - retailer_service
+  keycloak_db:
+    image: postgres:12
+    container_name: "keycloak_db"
+    restart: always
+    environment:
+      POSTGRES_USER: ${KEYCLOAK_DB_USER}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      POSTGRES_DB: ${KEYCLOAK_DB}
+    volumes:
+      - $PWD/.keycloakdata:/var/lib/postgres
+    ports:
+      - 54280:5434
+    networks:
+      - retailer_service
+  keycloak:
+    container_name: "keycloak_server"
+    image: jboss/keycloak
+    ports:
+      - 8081:8080
+    networks:
+      - retailer_service
+    depends_on:
+      - keycloak_db
+    environment:
+      DB_VENDOR: POSTGRES
+      DB_ADDR: keycloak_db
+      DB_DATABASE: ${KEYCLOAK_DB}
+      DB_USER: ${KEYCLOAK_DB_USER}
+      DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      DB_SCHEMA: public
+      KEYCLOAK_USER: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    restart: always
+  redis:
+    image: redis:6.2.6-alpine
+    container_name: "redis_server"
+    command: redis-server
+    ports:
+      - 6380:6379
+    networks:
+      - retailer_service
 
-#networks:
-#    frontend:
-#    backend:
+networks:
+    retailer_service:

@@ -1,4 +1,7 @@
-from .customer_schema import CustomerCreateSchema, CustomerUpdateSchema, CustomerSchema
+from .retailer_schema import (
+    RetailerCreateSchema, RetailerUpdateSchema,
+    RetailerSchema, RetailerReadSchema
+)
 from .auth_schema import (
     ConfirmTokenSchema,
     AddPinSchema,

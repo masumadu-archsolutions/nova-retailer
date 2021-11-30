@@ -1,8 +1,12 @@
 import os
 from app import dotenv_path
 from dotenv import load_dotenv
+import sys
 
 load_dotenv(dotenv_path)
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config:
@@ -33,7 +37,7 @@ class Config:
     # General
     DEBUG = False
     DEVELOPMENT = False
-    SECRET_KEY = "SECRET"
+    SECRET_KEY = os.getenv("SECRET_KEY", default="SECRET")
     FLASK_RUN_PORT = 6000
     TESTING = False
     LOGFILE = "log.log"
@@ -41,10 +45,12 @@ class Config:
     # Other Config
     KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID")
     KEYCLOAK_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET")
-    KEYCLOAK_URI = os.getenv("KEYCLOAK_URI")
+    KEYCLOAK_URI = f"{os.getenv('KEYCLOAK_SERVER')}:{os.getenv('KEYCLOAK_PORT')}"
     KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM")
+    KEYCLOAK_ADMIN_REALM = os.getenv("KEYCLOAK_ADMIN_REALM")
     KEYCLOAK_ADMIN_USER = os.getenv("KEYCLOAK_ADMIN_USER")
     KEYCLOAK_ADMIN_PASSWORD = os.getenv("KEYCLOAK_ADMIN_PASSWORD")
+    JWT_ISSUER = f"http://{os.getenv('KEYCLOAK_SERVER')}:{os.getenv('KEYCLOAK_PORT')}/auth/realms/{os.getenv('KEYCLOAK_REALM')}"
 
     @property
     def SQLALCHEMY_DATABASE_URI(self):  # noqa
@@ -55,7 +61,6 @@ class Config:
             port=self.SQL_DB_PORT,
             db_name=self.SQL_DB_NAME,
         )
-
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 

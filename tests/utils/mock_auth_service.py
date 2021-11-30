@@ -17,9 +17,10 @@ class MockAuthService(AuthServiceInterface):
         return self.tokens
 
     def create_user(self, data):
-        token = self.tokens
-        token["id"] = str(uuid.uuid4())
-        return token
+        # token = self.tokens
+        # token["id"] = str(uuid.uuid4())
+        user_id = str(uuid.uuid4())
+        return user_id
 
     def get_keycloak_access_token(self):
         return

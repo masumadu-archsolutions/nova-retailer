@@ -1,1 +1,1 @@
-from .customer_controller import CustomerController
+from .retailer_controller import RetailerController

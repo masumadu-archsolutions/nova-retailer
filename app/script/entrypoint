@@ -1,0 +1,99 @@
+#!/bin/bash
+
+# if any of the commands in the code fails for any reason, fail the entire script
+set -o errexit
+
+
+# exits if any of the env variables is not set
+set -o nounset
+
+check_postgres_availability() {
+python << END
+import sys
+import os
+import psycopg2
+dbname = os.getenv("DB_NAME")
+user = os.getenv("DB_USER")
+password = os.getenv("DB_PASSWORD")
+host = os.getenv("DEV_DB_HOST")
+port = os.getenv("DB_PORT")
+try:
+    psycopg2.connect(
+        dbname=dbname,
+        user=user,
+        password=password,
+        host=host,
+        port=port
+    )
+except psycopg2.OperationalError:
+    sys.exit(-1) # error quit python code
+sys.exit(0) # success exit loop
+END
+}
+until check_postgres_availability; do
+  >&2 echo 'Waiting for PostgreSQL to become available...'
+  sleep 1
+done
+>&2 echo 'PostgreSQL is available'
+
+check_redis_availability() {
+  echo "Checking for redis availability"
+  ping -c 2 redis &> /dev/null
+}
+
+until check_redis_availability; do
+  >&2 echo 'Waiting for Redis to become available...'
+  sleep 1
+done
+>&2 echo 'Redis is available'
+
+check_keycloak_db_availability() {
+python << END
+import sys
+import os
+import psycopg2
+dbname = os.getenv("KEYCLOAK_DB")
+user = os.getenv("KEYCLOAK_DB_USER")
+password = os.getenv("KEYCLOAK_DB_PASSWORD")
+host = os.getenv("KEYCLOAK_DB_HOST")
+port = os.getenv("KEYCLOAK_DB_PORT")
+try:
+    psycopg2.connect(
+        dbname=dbname,
+        user=user,
+        password=password,
+        host=host,
+        port=port
+    )
+except psycopg2.OperationalError:
+    sys.exit(-1) # error quit python code
+sys.exit(0) # success exit loop
+END
+}
+until check_keycloak_db_availability; do
+  >&2 echo 'Waiting for Keycloak Database to become available...'
+  sleep 1
+done
+>&2 echo 'Keycloak Database is available'
+
+
+check_keycloak_availability() {
+python << END
+import sys
+import requests
+from requests import RequestException
+try:
+    requests.get(url="http://keycloak:8080/auth/admin")
+except RequestException as exc:
+    sys.exit(-1) # error quit python code
+sys.exit(0) # success
+END
+}
+until check_keycloak_availability; do
+  >&2 echo 'Waiting for keycloak to become available...'
+  sleep 1
+done
+>&2 echo 'Keycloak is available'
+
+
+exec "$@"

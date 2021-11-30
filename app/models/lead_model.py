@@ -1,6 +1,7 @@
 import datetime
 import uuid
 from sqlalchemy.sql import func
+from sqlalchemy.dialects.postgresql import UUID
 
 from app import db
 
@@ -14,8 +15,9 @@ class Lead(db.Model):
     id_number: str
     otp: str
     created: datetime.datetime
+
     __tablename__ = "lead"
-    id = db.Column(db.GUID(), primary_key=True, default=uuid.uuid4)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     phone_number = db.Column(db.String(0), nullable=False)
     first_name = db.Column(db.String(60), nullable=False)
     last_name = db.Column(db.String(60), nullable=False)
