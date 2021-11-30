@@ -1,14 +1,12 @@
-import random
-import secrets
 import pytz
-from datetime import datetime, timedelta
 
 from core import Result
 from core.exceptions import AppException
 from core.notifier import Notifier
 from core.service_interfaces import AuthServiceInterface
 from app.repositories import RetailerRepository
-from app.notifications import SMSNotificationHandler
+
+# from app.notifications import SMSNotificationHandler
 
 utc = pytz.UTC
 
@@ -43,8 +41,22 @@ class RetailerController(Notifier):
 
         # Create user in auth service
         auth_result = self.auth_service.create_user(user_data)
-        # return Result({"id": retailer.id}, 201)
         return Result({"id": auth_result}, 201)
+
+    def login(self, retailer_credential):
+        phone_number = retailer_credential.get("phone_number")
+        pin = retailer_credential.get("pin")
+        retailer = self.retailer_repository.find({"phone_number": phone_number})
+        if not retailer:
+            raise AppException.NotFoundException(
+                context=f"retailer with phone number {phone_number} does not exists"
+            )
+
+        access_token = self.auth_service.get_token(
+            {"username": retailer.id, "password": pin}
+        )
+
+        return Result(access_token, 200)
 
     # def find_retailer(self, retailer_id):
     #     retailer = self.retailer_repository.find_by_id(retailer_id)
@@ -55,20 +67,7 @@ class RetailerController(Notifier):
     #     result = Result(retailer, 200)
     #     return result
     #
-    # def login(self, retailer_credential):
-    #     phone_number = retailer_credential.get("phone_number")
-    #     pin = retailer_credential.get("pin")
-    #     retailer = self.retailer_repository.find({"phone_number": phone_number})
-    #     if not retailer:
-    #         raise AppException.NotFoundException(
-    #             context=f"retailer with phone number {phone_number} does not exists"
-    #         )
     #
-    #     access_token = self.auth_service.get_token(
-    #         {"username": retailer.id, "password": pin}
-    #     )
-    #
-    #     return Result(access_token, 200)
     #
     # def delete(self, retailer_id):
     #     self.retailer_repository.delete(retailer_id)

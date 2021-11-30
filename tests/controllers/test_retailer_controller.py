@@ -1,30 +1,31 @@
-import uuid
 from core import Result
-from core.exceptions import AppException
-from app.utils import IDEnum
+
+# from core.exceptions import AppException
+# from app.utils import IDEnum
 from tests.utils.base_test_case import BaseTestCase
 from app.models import Retailer
 import pytest
 
 
 class TestRetailerController(BaseTestCase):
-
-    # retailer_data = {
-    #     "phone_number": "0244444444",
-    #     "first_name": "John",
-    #     "last_name": "Doe",
-    #     "id_type": "passport",
-    #     "id_number": "4829h9445839",
-    #     "pin": "1234",
-    # }
-
     @pytest.mark.retailer_controller
-    def test_create_customer(self):
-        retailer = self.retailer_controller.create_retailer(self.test_data)
+    def test_create_retailer(self):
+        retailer = self.retailer_controller.create_retailer(self.retailer_data)
         self.assertEqual(Retailer.query.count(), 1)
         self.assertIsInstance(retailer, Result)
         self.assertIn("id", retailer.value)
         self.assertEqual(retailer.status_code, 201)
+
+    @pytest.mark.retailer_controller
+    def test_login_retailer(self):
+        self.test_create_retailer()
+        retailer = self.retailer_controller.login(self.retailer_credentials)
+        self.assertEqual(Retailer.query.count(), 1)
+        self.assertIsInstance(retailer, Result)
+        self.assertEqual(len(retailer.value), 2)
+        self.assertIn("access_token", retailer.value)
+        self.assertIn("refresh_token", retailer.value)
+        self.assertEqual(retailer.status_code, 200)
         # self.assertTrue(create_new_admin.success)
         # self.assertEqual(create_new_admin.data.status_code, 201)
         # self.assertEqual(create_new_admin.exception_case, None)
@@ -46,7 +47,6 @@ class TestRetailerController(BaseTestCase):
         #
         # self.assertEqual(customer_search.id, updated_data.id)
         # self.assertEqual(customer_search.last_name, "Dew")
-
 
     # def test_edit_customer(self):
     #     customer = self.customer_repository.create(self.customer_data)

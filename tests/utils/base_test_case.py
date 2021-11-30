@@ -1,14 +1,17 @@
 import os
 from flask_testing import TestCase
-from app import create_app, db
+from app import create_app, db, APP_ROOT
 from app.controllers import RetailerController
 from app.repositories import RetailerRepository
 from tests import MockAuthService
 from config import Config
 from unittest.mock import patch
 import fakeredis
+
+# from app.models import Retailer
+
 # from app.services import RedisService
-from tests import test_data
+from tests import retailer_info, retailer_credential
 
 
 class BaseTestCase(TestCase):
@@ -38,9 +41,7 @@ class BaseTestCase(TestCase):
         return app
 
     def instantiate_classes(self, redis_server):
-        self.retailer_repository = RetailerRepository(
-            redis_service=redis_server
-        )
+        self.retailer_repository = RetailerRepository(redis_service=redis_server)
         # self.lead_repository = LeadRepository()
         self.auth_service = MockAuthService()
         self.retailer_controller = RetailerController(
@@ -50,8 +51,9 @@ class BaseTestCase(TestCase):
         )
 
     def setup_patches(self):
-        redis_patcher = patch("app.services.redis_service.redis_conn",
-                              fakeredis.FakeStrictRedis())
+        redis_patcher = patch(
+            "app.services.redis_service.redis_conn", fakeredis.FakeStrictRedis()
+        )
         self.addCleanup(redis_patcher.stop)
         self.redis = redis_patcher.start()
         kafka_patcher = patch(
@@ -60,13 +62,11 @@ class BaseTestCase(TestCase):
         )
         self.addCleanup(kafka_patcher.stop)
         kafka_patcher.start()
-        patcher = patch("core.utils.auth.jwt.decode",
-                        self.required_roles_side_effect)
+        patcher = patch("core.utils.auth.jwt.decode", self.required_roles_side_effect)
         self.addCleanup(patcher.stop)
         patcher.start()
         utc_patcher = patch(
-            "app.controllers.retailer_controller.utc.localize",
-            self.utc_side_effect
+            "app.controllers.retailer_controller.utc.localize", self.utc_side_effect
         )
         self.addCleanup(utc_patcher.stop)
         utc_patcher.start()
@@ -76,7 +76,8 @@ class BaseTestCase(TestCase):
         Will be called before every test
         """
         db.create_all()
-        self.test_data = test_data()
+        self.retailer_data = retailer_info
+        self.retailer_credentials = retailer_credential
 
     def tearDown(self):
         """
@@ -86,7 +87,8 @@ class BaseTestCase(TestCase):
         db.drop_all()
 
         file = f"{Config.SQL_DB_NAME}.sqlite3"
-        os.remove(file)
+        file_path = os.path.join(APP_ROOT, file)
+        os.remove(file_path)
 
     def dummy_kafka_method(self, topic, value):
         return True

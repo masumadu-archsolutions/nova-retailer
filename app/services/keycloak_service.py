@@ -1,4 +1,3 @@
-import json
 import requests
 from requests import exceptions
 import config
@@ -54,17 +53,13 @@ class AuthService(AuthServiceInterface):
                 context=constants.KEYCLOAK_CONNECTION_ERROR
             )
         except exceptions.HTTPError:
-            raise AppException.OperationError(
-                context=constants.KEYCLOAK_HTTP_ERROR
-            )
+            raise AppException.OperationError(context=constants.KEYCLOAK_HTTP_ERROR)
         except exceptions.Timeout:
             raise AppException.OperationError(
                 context=constants.KEYCLOAK_CONNECTION_TIMEOUT
             )
         except exceptions.RequestException:
-            raise AppException.OperationError(
-                context=constants.KEYCLOAK_REQUEST_ERROR
-            )
+            raise AppException.OperationError(context=constants.KEYCLOAK_REQUEST_ERROR)
 
         # handle response sent by keycloak server
         if response.status_code != 200:
@@ -105,17 +100,13 @@ class AuthService(AuthServiceInterface):
                 context=constants.KEYCLOAK_CONNECTION_ERROR
             )
         except exceptions.HTTPError:
-            raise AppException.OperationError(
-                context=constants.KEYCLOAK_HTTP_ERROR
-            )
+            raise AppException.OperationError(context=constants.KEYCLOAK_HTTP_ERROR)
         except exceptions.Timeout:
             raise AppException.OperationError(
                 context=constants.KEYCLOAK_CONNECTION_TIMEOUT
             )
         except exceptions.RequestException:
-            raise AppException.OperationError(
-                context=constants.KEYCLOAK_REQUEST_ERROR
-            )
+            raise AppException.OperationError(context=constants.KEYCLOAK_REQUEST_ERROR)
 
         # handle response sent by keycloak server
         if response.status_code != requests.codes.ok:
@@ -185,17 +176,13 @@ class AuthService(AuthServiceInterface):
                 context=constants.KEYCLOAK_CONNECTION_ERROR
             )
         except exceptions.HTTPError:
-            raise AppException.OperationError(
-                context=constants.KEYCLOAK_HTTP_ERROR
-            )
+            raise AppException.OperationError(context=constants.KEYCLOAK_HTTP_ERROR)
         except exceptions.Timeout:
             raise AppException.OperationError(
                 context=constants.KEYCLOAK_CONNECTION_TIMEOUT
             )
         except exceptions.RequestException:
-            raise AppException.OperationError(
-                context=constants.KEYCLOAK_REQUEST_ERROR
-            )
+            raise AppException.OperationError(context=constants.KEYCLOAK_REQUEST_ERROR)
         # handle response sent by keycloak server
         if response.status_code >= 300:
             raise AppException.KeyCloakAdminException(
@@ -220,17 +207,13 @@ class AuthService(AuthServiceInterface):
                 context=constants.KEYCLOAK_CONNECTION_ERROR
             )
         except exceptions.HTTPError:
-            raise AppException.OperationError(
-                context=constants.KEYCLOAK_HTTP_ERROR
-            )
+            raise AppException.OperationError(context=constants.KEYCLOAK_HTTP_ERROR)
         except exceptions.Timeout:
             raise AppException.OperationError(
                 context=constants.KEYCLOAK_CONNECTION_TIMEOUT
             )
         except exceptions.RequestException:
-            raise AppException.OperationError(
-                context=constants.KEYCLOAK_REQUEST_ERROR
-            )
+            raise AppException.OperationError(context=constants.KEYCLOAK_REQUEST_ERROR)
         # handle response sent by keycloak server
         if response.status_code != 200:
             raise AppException.KeyCloakAdminException(
@@ -255,17 +238,13 @@ class AuthService(AuthServiceInterface):
                 context=constants.KEYCLOAK_CONNECTION_ERROR
             )
         except exceptions.HTTPError:
-            raise AppException.OperationError(
-                context=constants.KEYCLOAK_HTTP_ERROR
-            )
+            raise AppException.OperationError(context=constants.KEYCLOAK_HTTP_ERROR)
         except exceptions.Timeout:
             raise AppException.OperationError(
                 context=constants.KEYCLOAK_CONNECTION_TIMEOUT
             )
         except exceptions.RequestException:
-            raise AppException.OperationError(
-                context=constants.KEYCLOAK_REQUEST_ERROR
-            )
+            raise AppException.OperationError(context=constants.KEYCLOAK_REQUEST_ERROR)
         # handle response sent by keycloak server
         if response.status_code >= 300:
             raise AppException.KeyCloakAdminException(
@@ -303,17 +282,13 @@ class AuthService(AuthServiceInterface):
                 context=constants.KEYCLOAK_CONNECTION_ERROR
             )
         except exceptions.HTTPError:
-            raise AppException.OperationError(
-                context=constants.KEYCLOAK_HTTP_ERROR
-            )
+            raise AppException.OperationError(context=constants.KEYCLOAK_HTTP_ERROR)
         except exceptions.Timeout:
             raise AppException.OperationError(
                 context=constants.KEYCLOAK_CONNECTION_TIMEOUT
             )
         except exceptions.RequestException:
-            raise AppException.OperationError(
-                context=constants.KEYCLOAK_REQUEST_ERROR
-            )
+            raise AppException.OperationError(context=constants.KEYCLOAK_REQUEST_ERROR)
         # handle response from keycloak server
         if response.status_code >= 300:
             raise AppException.KeyCloakAdminException(
@@ -339,17 +314,13 @@ class AuthService(AuthServiceInterface):
                 context=constants.KEYCLOAK_CONNECTION_ERROR
             )
         except exceptions.HTTPError:
-            raise AppException.OperationError(
-                context=constants.KEYCLOAK_HTTP_ERROR
-            )
+            raise AppException.OperationError(context=constants.KEYCLOAK_HTTP_ERROR)
         except exceptions.Timeout:
             raise AppException.OperationError(
                 context=constants.KEYCLOAK_CONNECTION_TIMEOUT
             )
         except exceptions.RequestException:
-            raise AppException.OperationError(
-                context=constants.KEYCLOAK_REQUEST_ERROR
-            )
+            raise AppException.OperationError(context=constants.KEYCLOAK_REQUEST_ERROR)
         # handle response from keycloak server
         if response.status_code >= 300:
             raise AppException.KeyCloakAdminException(
@@ -378,21 +349,16 @@ class AuthService(AuthServiceInterface):
                 context=constants.KEYCLOAK_CONNECTION_ERROR
             )
         except exceptions.HTTPError:
-            raise AppException.OperationError(
-                context=constants.KEYCLOAK_HTTP_ERROR
-            )
+            raise AppException.OperationError(context=constants.KEYCLOAK_HTTP_ERROR)
         except exceptions.Timeout:
             raise AppException.OperationError(
                 context=constants.KEYCLOAK_CONNECTION_TIMEOUT
             )
         except exceptions.RequestException:
-            raise AppException.OperationError(
-                context=constants.KEYCLOAK_REQUEST_ERROR
-            )
+            raise AppException.OperationError(context=constants.KEYCLOAK_REQUEST_ERROR)
         if response.status_code != requests.codes.ok:
             raise AppException.KeyCloakAdminException(
-                {constants.KEYCLOAK_ERROR: [response.json()]},
-                status_code=500
+                {constants.KEYCLOAK_ERROR: [response.json()]}, status_code=500
             )
         data = response.json()
         return data.get("access_token")

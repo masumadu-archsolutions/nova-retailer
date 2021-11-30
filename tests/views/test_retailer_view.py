@@ -7,37 +7,32 @@ import pytest
 
 
 class TestCustomerRoutes(BaseTestCase):
-    # auth_service_id = str(uuid.uuid4())
-    #
-    # customer_data = {
-    #     "phone_number": "0242111111",
-    #     "first_name": "John",
-    #     "last_name": "Doe",
-    #     "id_type": "passport",
-    #     "id_number": "4829h9445839",
-    #     "auth_service_id": auth_service_id,
-    # }
-
-    account_creation_data = {
-        "first_name": "John",
-        "last_name": "Doe",
-        "id_type": "passport",
-        "id_number": "4829h9445839",
-        "phone_number": "0242111111",
-    }
-
     @pytest.mark.retailer_view
     def test_create_retailer(self):
         with self.client:
             response = self.client.post(
-                url_for("retailer.create_retailer"), json=self.test_data
+                url_for("retailer.create_retailer"), json=self.retailer_data
             )
             response_data = response.json
             self.assertStatus(response, 201)
             self.assertIsInstance(response_data, dict)
             self.assertEqual(len(response_data), 1)
             self.assertIn("id", response_data)
-            return response_data
+
+    @pytest.mark.active
+    def test_login_retailer(self):
+        self.test_create_retailer()
+        with self.client:
+            response = self.client.post(
+                url_for("retailer.login_retailer"), json=self.retailer_credentials
+            )
+            response_data = response.json
+            self.assert200(response)
+            self.assertIsInstance(response_data, dict)
+            self.assertEqual(len(response_data), 2)
+            self.assertIn("access_token", response_data)
+            self.assertIn("refresh_token", response_data)
+            # return response_data
 
     # def test_create_error(self):
     #     self.test_add_pin()

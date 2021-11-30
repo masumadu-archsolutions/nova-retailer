@@ -7,14 +7,15 @@ from apispec_webframeworks.flask import FlaskPlugin
 
 # Create an APISpec
 from app.schema import (
-    RetailerSchema, RetailerReadSchema,
+    RetailerSchema,
+    LoginSchema,
     RetailerCreateSchema,
+    TokenSchema,
     # RetailerUpdateSchema,
     # ConfirmTokenSchema,
     # AddPinSchema,
     # ResendTokenSchema,
     # LoginSchema,
-    TokenSchema,
     # PinChangeSchema,
     # PinResetSchema,
     # PinResetRequestSchema,
@@ -34,8 +35,9 @@ spec.components.security_scheme("ApiKeyAuth", api_key_scheme)
 spec.components.security_scheme("bearerAuth", bearer_scheme)
 
 # register schemas with spec
-spec.components.schema("Retailer", schema=RetailerReadSchema)
+spec.components.schema("Retailer", schema=RetailerSchema)
 spec.components.schema("RetailerCreate", schema=RetailerCreateSchema)
+spec.components.schema("RetailerLogin", schema=LoginSchema)
 spec.components.schema("TokenData", schema=TokenSchema)
 
 # spec.components.schema("CustomerUpdate", schema=RetailerUpdateSchema)

@@ -55,13 +55,11 @@ def auth_required(authorized_roles=None):
                     return func(*args, **kwargs)
             except ExpiredSignatureError:
                 raise AppException.ExpiredTokenException("Token Expired")
-            except InvalidTokenError as e:
+            except InvalidTokenError:
                 raise AppException.OperationError("Invalid Token")
             except PyJWTError:
                 raise AppException.OperationError("Error decoding token")
-            raise AppException.Unauthorized(
-                context="operation unauthorized"
-            )
+            raise AppException.Unauthorized(context="operation unauthorized")
 
         return view_wrapper
 

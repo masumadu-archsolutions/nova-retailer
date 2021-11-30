@@ -1,6 +1,8 @@
 from .retailer_schema import (
-    RetailerCreateSchema, RetailerUpdateSchema,
-    RetailerSchema, RetailerReadSchema
+    RetailerCreateSchema,
+    RetailerUpdateSchema,
+    RetailerSchema,
+    RetailerReadSchema,
 )
 from .auth_schema import (
     ConfirmTokenSchema,

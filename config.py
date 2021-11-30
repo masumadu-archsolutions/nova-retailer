@@ -50,7 +50,11 @@ class Config:
     KEYCLOAK_ADMIN_REALM = os.getenv("KEYCLOAK_ADMIN_REALM")
     KEYCLOAK_ADMIN_USER = os.getenv("KEYCLOAK_ADMIN_USER")
     KEYCLOAK_ADMIN_PASSWORD = os.getenv("KEYCLOAK_ADMIN_PASSWORD")
-    JWT_ISSUER = f"http://{os.getenv('KEYCLOAK_SERVER')}:{os.getenv('KEYCLOAK_PORT')}/auth/realms/{os.getenv('KEYCLOAK_REALM')}"
+    JWT_ISSUER = (
+        f"http://{os.getenv('KEYCLOAK_SERVER')}:"
+        f"{os.getenv('KEYCLOAK_PORT')}/auth/realms/"
+        f"{os.getenv('KEYCLOAK_REALM')}"
+    )
 
     @property
     def SQLALCHEMY_DATABASE_URI(self):  # noqa
@@ -61,6 +65,7 @@ class Config:
             port=self.SQL_DB_PORT,
             db_name=self.SQL_DB_NAME,
         )
+
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 

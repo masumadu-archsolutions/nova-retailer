@@ -7,7 +7,11 @@ from app.utils import StatusEnum, IDEnum
 
 class RetailerSchema(Schema):
     id = fields.UUID()
-    phone_number = fields.Str(validate=[validate.Regexp(constants.PHONE_NUMBER_REGEX), ])
+    phone_number = fields.Str(
+        validate=[
+            validate.Regexp(constants.PHONE_NUMBER_REGEX),
+        ]
+    )
     first_name = fields.Str(validate=validate.Length(min=2))
     last_name = fields.Str(validate=validate.Length(min=2))
     id_type = EnumField(IDEnum)
@@ -19,15 +23,26 @@ class RetailerSchema(Schema):
 
     class Meta:
         fields = [
-            "id", "phone_number", "first_name", "last_name", "id_type",
-            "id_number", "pin", "status", "created", "modified",
+            "id",
+            "phone_number",
+            "first_name",
+            "last_name",
+            "id_type",
+            "id_number",
+            "pin",
+            "status",
+            "created",
+            "modified",
         ]
         load_only = ["pin"]
 
 
 class RetailerCreateSchema(Schema):
     phone_number = fields.Str(
-        validate=[validate.Regexp(constants.PHONE_NUMBER_REGEX), validate.Length(min=10, max=10)],
+        validate=[
+            validate.Regexp(constants.PHONE_NUMBER_REGEX),
+            validate.Length(min=10, max=10),
+        ],
         required=True,
     )
     first_name = fields.Str(required=True, validate=validate.Length(min=2))
@@ -38,14 +53,22 @@ class RetailerCreateSchema(Schema):
 
     class Meta:
         fields = [
-            "phone_number", "first_name", "last_name",
-            "id_type", "id_number", "pin",
+            "phone_number",
+            "first_name",
+            "last_name",
+            "id_type",
+            "id_number",
+            "pin",
         ]
 
 
 class RetailerReadSchema(Schema):
     id = fields.UUID()
-    phone_number = fields.Str(validate=[validate.Regexp(constants.PHONE_NUMBER_REGEX), ])
+    phone_number = fields.Str(
+        validate=[
+            validate.Regexp(constants.PHONE_NUMBER_REGEX),
+        ]
+    )
     first_name = fields.Str(validate=validate.Length(min=2))
     last_name = fields.Str(validate=validate.Length(min=2))
     id_type = EnumField(IDEnum)
@@ -56,8 +79,15 @@ class RetailerReadSchema(Schema):
 
     class Meta:
         fields = [
-            "id", "phone_number", "first_name", "last_name", "id_type",
-            "id_number", "status", "created", "modified",
+            "id",
+            "phone_number",
+            "first_name",
+            "last_name",
+            "id_type",
+            "id_number",
+            "status",
+            "created",
+            "modified",
         ]
 
 
@@ -71,6 +101,11 @@ class RetailerUpdateSchema(Schema):
 
     class Meta:
         fields = [
-            "id", "phone_number", "first_name", "last_name",
-            "id_type", "id_number", "status",
+            "id",
+            "phone_number",
+            "first_name",
+            "last_name",
+            "id_type",
+            "id_number",
+            "status",
         ]

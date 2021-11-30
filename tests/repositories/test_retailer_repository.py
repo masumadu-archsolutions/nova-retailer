@@ -21,16 +21,16 @@ class TestRetailerRepository(BaseTestCase):
 
     @pytest.mark.retailer_repository
     def test_create(self):
-        retailer = self.retailer_repository.create(self.test_data)
+        retailer = self.retailer_repository.create(self.retailer_data)
         self.assertEqual(Retailer.query.count(), 1)
         self.assertIsInstance(retailer, Retailer)
         self.assertIsNotNone(retailer.id)
-        self.assertEqual(self.test_data["first_name"], retailer.first_name)
-        self.assertEqual(self.test_data["last_name"], retailer.last_name)
-        self.assertEqual(self.test_data["phone_number"], retailer.phone_number)
+        self.assertEqual(self.retailer_data["first_name"], retailer.first_name)
+        self.assertEqual(self.retailer_data["last_name"], retailer.last_name)
+        self.assertEqual(self.retailer_data["phone_number"], retailer.phone_number)
         self.assertEqual(IDEnum.passport, retailer.id_type)
-        self.assertEqual(self.test_data["id_number"], retailer.id_number)
-        self.assertTrue(retailer.verify_password(self.test_data.get("pin")))
+        self.assertEqual(self.retailer_data["id_number"], retailer.id_number)
+        self.assertTrue(retailer.verify_password(self.retailer_data.get("pin")))
         # self.assertEqual(NEW_ADMIN_DATA["email"], create_new_admin.email)
         # self.assertEqual(NEW_ADMIN_DATA["username"], create_new_admin.username)
         # self.assertTrue(

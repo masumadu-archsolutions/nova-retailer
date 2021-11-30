@@ -11,6 +11,7 @@ from app.utils import IDEnum, StatusEnum
 def generate_uuid():
     return str(uuid.uuid4())
 
+
 @dataclass
 class Retailer(db.Model):
     id: str
