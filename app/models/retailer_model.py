@@ -13,7 +13,7 @@ def generate_uuid():
 
 
 @dataclass
-class Retailer(db.Model):
+class RetailerModel(db.Model):
     id: str
     phone_number: str
     first_name: str

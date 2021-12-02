@@ -1,17 +1,27 @@
 # import uuid
-# from unittest import mock
+import unittest
+
 # from core.exceptions import AppException
 from tests.utils.base_test_case import BaseTestCase
 from flask import url_for
 import pytest
+from unittest import mock
+from app.services import AuthService
+
+# from tests import MockAuthService
+from app.models import RetailerModel
 
 
-class TestCustomerRoutes(BaseTestCase):
+class TestRetailerRoutes(BaseTestCase):
     @pytest.mark.retailer_view
-    def test_create_retailer(self):
+    @mock.patch.object(AuthService, "create_user")
+    def test_create_retailer(self, mock_create_user):
+        mock_create_user.return_value = self.auth_service.create_user(
+            self.create_retailer
+        )
         with self.client:
             response = self.client.post(
-                url_for("retailer.create_retailer"), json=self.retailer_data
+                url_for("retailer.create_retailer"), json=self.create_retailer
             )
             response_data = response.json
             self.assertStatus(response, 201)
@@ -19,9 +29,12 @@ class TestCustomerRoutes(BaseTestCase):
             self.assertEqual(len(response_data), 1)
             self.assertIn("id", response_data)
 
-    @pytest.mark.active
-    def test_login_retailer(self):
-        self.test_create_retailer()
+    @pytest.mark.retailer_view
+    @mock.patch.object(AuthService, "get_token")
+    def test_login_retailer(self, mock_get_token):
+        mock_get_token.return_value = self.auth_service.get_token(
+            self.retailer_credentials
+        )
         with self.client:
             response = self.client.post(
                 url_for("retailer.login_retailer"), json=self.retailer_credentials
@@ -32,8 +45,81 @@ class TestCustomerRoutes(BaseTestCase):
             self.assertEqual(len(response_data), 2)
             self.assertIn("access_token", response_data)
             self.assertIn("refresh_token", response_data)
-            # return response_data
 
+    @pytest.mark.retailer_view
+    @mock.patch("core.utils.auth.jwt.decode")
+    def test_find_by_id(self, mock_jwt_decode):
+        mock_jwt_decode.return_value = self.required_roles
+        with self.client:
+            self.assertEqual(RetailerModel.query.count(), 1)
+            retailer = RetailerModel.query.filter_by(
+                phone_number=self.existing_retailer.get("phone_number")
+            ).first()
+            self.assertIsInstance(retailer, RetailerModel)
+            self.assertIsNotNone(retailer.id)
+            response = self.client.get(
+                url_for("retailer.find_retailer", retailer_id=retailer.id),
+                headers=self.headers,
+            )
+            response_data = response.json
+            self.assertStatus(response, 200)
+            self.assertIsInstance(response_data, dict)
+            self.assertIsNotNone(response_data.get("id"))
+            self.assertNotIn("pin", response_data)
+            self.assertEqual(
+                self.existing_retailer.get("phone_number"),
+                response_data.get("phone_number"),
+            )
+
+    @pytest.mark.retailer_view
+    @mock.patch.object(AuthService, "update_user")
+    @mock.patch("core.utils.auth.jwt.decode")
+    def test_update_by_id(self, mock_jwt_decode, mock_update_user):
+        mock_jwt_decode.return_value = self.required_roles
+        mock_update_user.return_value = self.auth_service.update_user(
+            self.update_retailer
+        )
+        with self.client:
+            self.assertEqual(RetailerModel.query.count(), 1)
+            retailer = RetailerModel.query.filter_by(
+                phone_number=self.existing_retailer.get("phone_number")
+            ).first()
+            self.assertIsInstance(retailer, RetailerModel)
+            self.assertIsNotNone(retailer.id)
+            response = self.client.patch(
+                url_for("retailer.update_retailer", retailer_id=retailer.id),
+                json=self.update_retailer,
+                headers=self.headers,
+            )
+            response_data = response.json
+            self.assertStatus(response, 200)
+            self.assertIsInstance(response_data, dict)
+            self.assertIsNotNone(response_data.get("id"))
+            self.assertNotIn("pin", response_data)
+            self.assertNotEqual(
+                response_data.get("phone_number"),
+                self.existing_retailer.get("phone_number"),
+            )
+            self.assertEqual(
+                response_data.get("phone_number"),
+                self.update_retailer.get("phone_number"),
+            )
+
+
+if __name__ == "__main__":
+    unittest.main()
+    #     data = response.json
+    #
+    #     self.assertEqual(
+    #         data.get("first_name"), self.customer_data.get("first_name")
+    #     )
+    # find_admin_by_id = AdminController(
+    #     AdminRepository(self.redis)).find_by_id(1)
+    # self.assertEqual(AdminModel.query.count(), 1)
+    # self.assertIsInstance(find_admin_by_id, ServiceResult)
+    # self.assertTrue(find_admin_by_id.success)
+    # self.assert200(find_admin_by_id.data)
+    # self.assertEqual(find_admin_by_id.exception_case, None)
     # def test_create_error(self):
     #     self.test_add_pin()
     #

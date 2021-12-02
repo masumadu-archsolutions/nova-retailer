@@ -33,9 +33,13 @@ class RetailerController(Notifier):
         retailer = self.retailer_repository.create(retailer_data)
         user_data = {
             "username": retailer.id,
-            "first_name": retailer.first_name,
-            "last_name": retailer.last_name,
+            "first_name": retailer_data.get("first_name"),
+            "last_name": retailer_data.get("last_name"),
             "password": retailer_data.get("pin"),
+            "phone_number": retailer_data.get("phone_number"),
+            "id_type": retailer_data.get("id_type"),
+            "id_number": retailer_data.get("id_number"),
+            "status": retailer.status.value,
             "group": "retailer",
         }
 
@@ -58,16 +62,30 @@ class RetailerController(Notifier):
 
         return Result(access_token, 200)
 
-    # def find_retailer(self, retailer_id):
-    #     retailer = self.retailer_repository.find_by_id(retailer_id)
-    #     return Result(retailer, 200)
+    def find_retailer(self, retailer_id):
+        retailer = self.retailer_repository.find_by_id(retailer_id)
+        return Result(retailer, 200)
+
+    def update_retailer(self, retailer_id, retailer_data):
+        retailer = self.retailer_repository.update_by_id(retailer_id, retailer_data)
+        data = {
+            "username": retailer_id,
+            "first_name": retailer_data.get("first_name"),
+            "last_name": retailer_data.get("last_name"),
+            "phone_number": retailer_data.get("phone_number"),
+            "id_type": retailer_data.get("id_type"),
+            "id_number": retailer_data.get("id_number"),
+            "status": retailer_data.get("status"),
+        }
+        #
+        # update user in auth service
+        # auth_result = self.auth_service.update_user(data)
+        self.auth_service.update_user(data)
+        # return Result({"id": auth_result}, 200)
+        return Result(retailer, 200)
+
     #
-    # def update_retailer(self, retailer_id, retailer_data):
-    #     retailer = self.retailer_repository.update_by_id(retailer_id, retailer_data)
-    #     result = Result(retailer, 200)
-    #     return result
-    #
-    #
+
     #
     # def delete(self, retailer_id):
     #     self.retailer_repository.delete(retailer_id)

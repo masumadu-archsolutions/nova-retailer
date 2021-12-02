@@ -50,8 +50,9 @@ class Config:
     KEYCLOAK_ADMIN_REALM = os.getenv("KEYCLOAK_ADMIN_REALM")
     KEYCLOAK_ADMIN_USER = os.getenv("KEYCLOAK_ADMIN_USER")
     KEYCLOAK_ADMIN_PASSWORD = os.getenv("KEYCLOAK_ADMIN_PASSWORD")
+    JWT_ALGORITHMS = ["HS256", "RS256"]
     JWT_ISSUER = (
-        f"http://{os.getenv('KEYCLOAK_SERVER')}:"
+        f"{os.getenv('KEYCLOAK_SERVER')}:"
         f"{os.getenv('KEYCLOAK_PORT')}/auth/realms/"
         f"{os.getenv('KEYCLOAK_REALM')}"
     )

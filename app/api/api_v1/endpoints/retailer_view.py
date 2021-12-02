@@ -10,6 +10,7 @@ from app.schema import (
     RetailerSchema,
     LoginSchema,
     TokenSchema,
+    RetailerUpdateSchema,
     # TokenSchema, RetailerReadSchema, RetailerUpdateSchema,
     # RetailerUpdateSchema,
     # ConfirmTokenSchema, AddPinSchema, ResendTokenSchema,
@@ -60,8 +61,8 @@ def create_retailer():
       tags:
           - Authentication
     """
-    retailer_data = request.json
-    result = retailer_controller.create_retailer(retailer_data)
+    data = request.json
+    result = retailer_controller.create_retailer(data)
     return handle_result(result, schema=RetailerSchema)
 
 
@@ -86,8 +87,8 @@ def login_retailer():
       tags:
           - Authentication
     """
-    retailer_credentials = request.json
-    result = retailer_controller.login(retailer_credentials)
+    data = request.json
+    result = retailer_controller.login(data)
     return handle_result(result, schema=TokenSchema)
 
 
@@ -116,5 +117,42 @@ def find_retailer(retailer_id):
       tags:
           - Retailer
     """
-    result = retailer_controller.find_retailer(retailer_id)
+    data = retailer_controller.find_retailer(retailer_id)
+    return handle_result(data, schema=RetailerSchema)
+
+
+@retailer.route("/accounts/<string:retailer_id>", methods=["PATCH"])
+@validator(schema=RetailerUpdateSchema)
+@auth_required()
+def update_retailer(retailer_id):
+    """
+    ---
+    patch:
+      description: updates a retailer with id specified in path
+      parameters:
+        - in: path
+          name: retailer_id
+          required: true
+          schema:
+            type: string
+          description: The Retailer ID
+      requestBody:
+        required: true
+        content:
+            application/json:
+                schema: RetailerUpdate
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: returns a retailer
+          content:
+            application/json:
+              schema: Retailer
+      tags:
+          - Retailer
+    """
+
+    data = request.json
+    result = retailer_controller.update_retailer(retailer_id, data)
     return handle_result(result, schema=RetailerSchema)

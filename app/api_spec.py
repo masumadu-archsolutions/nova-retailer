@@ -11,7 +11,7 @@ from app.schema import (
     LoginSchema,
     RetailerCreateSchema,
     TokenSchema,
-    # RetailerUpdateSchema,
+    RetailerUpdateSchema,
     # ConfirmTokenSchema,
     # AddPinSchema,
     # ResendTokenSchema,
@@ -39,8 +39,7 @@ spec.components.schema("Retailer", schema=RetailerSchema)
 spec.components.schema("RetailerCreate", schema=RetailerCreateSchema)
 spec.components.schema("RetailerLogin", schema=LoginSchema)
 spec.components.schema("TokenData", schema=TokenSchema)
-
-# spec.components.schema("CustomerUpdate", schema=RetailerUpdateSchema)
+spec.components.schema("RetailerUpdate", schema=RetailerUpdateSchema)
 # spec.components.schema("ConfirmToken", schema=ConfirmTokenSchema)
 # spec.components.schema("PinData", schema=AddPinSchema)
 # spec.components.schema("ResendTokenData", schema=ResendTokenSchema)

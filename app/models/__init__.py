@@ -1,3 +1,3 @@
-from .retailer_model import Retailer
+from .retailer_model import RetailerModel
 
 # from .lead_model import Lead

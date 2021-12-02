@@ -30,12 +30,12 @@ def auth_required(authorized_roles=None):
                 payload = jwt.decode(
                     token,
                     key=key,
-                    algorithms=["HS256", "RS256"],
+                    algorithms=config.Config.JWT_ALGORITHMS,
+                    # algorithms=["HS256", "RS256"],
                     audience="account",
-                    issuer=config.Config.JWT_ISSUER
-                    # issuer=os.getenv("JWT_ISSUER"),
+                    issuer=config.Config.JWT_ISSUER,
                 )  # noqa E501
-                # Get retailer assigned roles from payload
+                # Get retailer roles from token
                 token_role = payload.get("resource_access").get("nova_retailer")
                 retailer_role = token_role.get("roles")
 
@@ -53,12 +53,12 @@ def auth_required(authorized_roles=None):
                             "preferred_username"
                         )  # noqa E501
                     return func(*args, **kwargs)
-            except ExpiredSignatureError:
-                raise AppException.ExpiredTokenException("Token Expired")
-            except InvalidTokenError:
-                raise AppException.OperationError("Invalid Token")
-            except PyJWTError:
-                raise AppException.OperationError("Error decoding token")
+            except ExpiredSignatureError as e:
+                raise AppException.ExpiredTokenException(context=e.args)
+            except InvalidTokenError as e:
+                raise AppException.OperationError(context=e.args)
+            except PyJWTError as e:
+                raise AppException.OperationError(context=e.args)
             raise AppException.Unauthorized(context="operation unauthorized")
 
         return view_wrapper

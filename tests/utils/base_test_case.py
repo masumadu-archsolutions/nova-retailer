@@ -8,23 +8,19 @@ from config import Config
 from unittest.mock import patch
 import fakeredis
 
-# from app.models import Retailer
+from app.models import RetailerModel
 
 # from app.services import RedisService
-from tests import retailer_info, retailer_credential
+from tests import (
+    existing_retailer,
+    retailer_credential,
+    new_retailer,
+    update_retailer,
+)
 
 
 class BaseTestCase(TestCase):
-    required_roles = {
-        "realm_access": {
-            "roles": [
-                f"{Config.APP_NAME}_change_password",
-                f"{Config.APP_NAME}_delete_customer",
-                f"{Config.APP_NAME}_show_customer",
-                f"{Config.APP_NAME}_update_customer",
-            ]
-        },
-    }
+    required_roles = {"resource_access": {"nova_retailer": {"roles": ["retailer"]}}}
 
     def create_app(self):
         app = create_app("config.TestingConfig")
@@ -42,12 +38,10 @@ class BaseTestCase(TestCase):
 
     def instantiate_classes(self, redis_server):
         self.retailer_repository = RetailerRepository(redis_service=redis_server)
-        # self.lead_repository = LeadRepository()
         self.auth_service = MockAuthService()
         self.retailer_controller = RetailerController(
             retailer_repository=self.retailer_repository,
             auth_service=self.auth_service,
-            # lead_repository=self.lead_repository,
         )
 
     def setup_patches(self):
@@ -62,7 +56,7 @@ class BaseTestCase(TestCase):
         )
         self.addCleanup(kafka_patcher.stop)
         kafka_patcher.start()
-        patcher = patch("core.utils.auth.jwt.decode", self.required_roles_side_effect)
+        patcher = patch("core.utils.auth.jwt.decode", self.token_decode)
         self.addCleanup(patcher.stop)
         patcher.start()
         utc_patcher = patch(
@@ -76,8 +70,13 @@ class BaseTestCase(TestCase):
         Will be called before every test
         """
         db.create_all()
-        self.retailer_data = retailer_info
+        self.existing_retailer = existing_retailer
         self.retailer_credentials = retailer_credential
+        self.update_retailer = update_retailer
+        self.create_retailer = new_retailer
+        self.model_data = RetailerModel(**self.existing_retailer)
+        db.session.add(self.model_data)
+        db.session.commit()
 
     def tearDown(self):
         """
@@ -93,9 +92,7 @@ class BaseTestCase(TestCase):
     def dummy_kafka_method(self, topic, value):
         return True
 
-    def required_roles_side_effect(  # noqa
-        self, token, key, algorithms, audience, issuer
-    ):
+    def token_decode(self, token, key, algorithms, audience, issuer):  # noqa
         return self.required_roles
 
     def utc_side_effect(self, args):  # noqa
